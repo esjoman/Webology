@@ -1,124 +1,35 @@
-# 
-# TODO: templating
-# 
-
 import webapp2
 import string
 import cgi
 import re
+import os
+import jinja2
 
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASS_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+\.[\S]+$")
-home_html="""\
-<html>
-  <ul>
-    <li><a href="/hello-udacity">Problem 1 - Hello, Udacity!</a></li>
-    <li>Problem 2
-      <ul>
-        <li><a href="/rot13">Part 1 - ROT13</a></li>
-        <li><a href="/signup">Part 2 - Signup</a></li>
-      </ul>
-    </li>
-  <ul>
-</html>
-"""
-rot13_html="""\
-<html>
-  <h2>Enter some text to ROT13:</h2>
-  <form method="post">
-    <textarea name="text" 
-     style="height:100px;width:400px">%s</textarea>
-     <br>
-     <input type="submit"/>
-  </form>
-<html>
-"""
-signup_html="""\
-<html>
-  <head>
-    <title>Signup</title>
-    <style type="text/css">
-      .label {text-align: right}
-      .error {color: red}
-    </style>
-  </head>
-  <body>
-    <h2>Signup</h2>
-    <form method="post">
-      <table>
-        <tr>
-          <td class="label">
-            Username
-          </td>
-          <td>
-            <input type="text" name="username" value="%(username)s">
-          </td>
-          <td class="error">%(username_error)s</td>
-        </tr>
-
-        <tr>
-          <td class="label">
-            Password
-          </td>
-          <td>
-            <input type="password" name="password" value="">
-          </td>
-          <td class="error">%(password_error)s</td>
-        </tr>
-
-        <tr>
-          <td class="label">
-            Verify Password
-          </td>
-          <td>
-            <input type="password" name="verify" value="">
-          </td>
-          <td class="error">%(verify_error)s</td>
-        </tr>
-
-        <tr>
-          <td class="label">
-            Email (optional)
-          </td>
-          <td>
-            <input type="text" name="email" value="%(email)s">
-          </td>
-          <td class="error">%(email_error)s</td>
-        </tr>
-      </table>
-
-      <input type="submit">
-    </form>
-  </body>
-
-</html>
-"""
-welcome_html="""\
-<html>
-  <head>
-    <title>Welcome</title>
-  </head>
-  <body>
-    <h2>Welcome, %s!</h2>
-  </body>
-<html>
-"""
+JINJA_ENV = jinja2.Environment(autoescape=True, 
+    loader=jinja2.FileSystemLoader(
+        os.path.join(os.path.dirname(__file__), 'templates')))
 
 
 class HomePage(webapp2.RequestHandler):
     def get(self):
-        self.response.write(home_html)
+        template = JINJA_ENV.get_template('index.html')
+        self.response.write(template.render())
+
 
 class HelloUdacityPage(webapp2.RequestHandler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write('Hello, Udacity!')
 
+
 class ROT13Page(webapp2.RequestHandler):
     def write_page(self, text=""):
-        self.response.write(rot13_html % text)
+        template = JINJA_ENV.get_template('rot13.html')
+        self.response.write(template.render({'text': text}))
     
     def get(self):
         self.write_page()
@@ -126,7 +37,7 @@ class ROT13Page(webapp2.RequestHandler):
     def post(self):
         user_text = str(self.request.get("text"))
         rot13_text = self.rot13(user_text)
-        self.write_page(cgi.escape(rot13_text, quote=True))
+        self.write_page(rot13_text)
     
     def rot13(self, s):
         lowercase = string.ascii_lowercase
@@ -136,6 +47,7 @@ class ROT13Page(webapp2.RequestHandler):
         trans_lower = string.maketrans(lowercase, rot13_lower)
         trans_upper = string.maketrans(uppercase, rot13_upper)
         return s.translate(trans_lower).translate(trans_upper)
+
 
 class SignupPage(webapp2.RequestHandler):
     def write_page(self, username="", username_error="", 
@@ -147,7 +59,8 @@ class SignupPage(webapp2.RequestHandler):
                    'verify_error': verify_error, 
                    'email': email, 
                    'email_error': email_error}
-        self.response.write(signup_html % replace)
+        template = JINJA_ENV.get_template('signup.html')
+        self.response.write(template.render(replace))
     
     def get(self):
         self.write_page()
@@ -176,7 +89,8 @@ class WelcomePage(webapp2.RequestHandler):
     def get(self):
         username = self.request.get("username")
         if username and valid_username(username):
-            self.response.write(welcome_html % username)
+            template = JINJA_ENV.get_template('welcome.html')
+            self.response.write(template.render({'username': username}))
         else:
             self.redirect('/signup')
 
