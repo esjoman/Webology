@@ -14,42 +14,48 @@ JINJA_ENV = jinja2.Environment(autoescape=True,
         os.path.join(os.path.dirname(__file__), 'templates')))
 
 
-class HomePage(webapp2.RequestHandler):
+class RequestWrangler(webapp2.RequestHandler):
+    """
+    Extends webapp2's RequestHandler to serve as a base class for
+    rendering templates and writing out responses
+    """
+    def render(self, template, **kwargs):
+        t = JINJA_ENV.get_template(template)
+        self.response.write(t.render(kwargs))
+
+class HomePage(RequestWrangler):
+    template = 'index.html'
+    
     def get(self):
-        template = JINJA_ENV.get_template('index.html')
-        self.response.write(template.render())
+        self.render(self.template)
 
-
-class HelloUdacityPage(webapp2.RequestHandler):
+class HelloUdacityPage(RequestWrangler):
     def get(self):
         self.response.headers['Content-Type'] = 'text/plain'
         self.response.write('Hello, Udacity!')
 
-
-class ROT13Page(webapp2.RequestHandler):
-    def write_page(self, text=""):
-        template = JINJA_ENV.get_template('rot13.html')
-        self.response.write(template.render({'text': text}))
+class ROT13Page(RequestWrangler):
+    template = 'rot13.html'
     
     def get(self):
-        self.write_page()
+        self.render(self.template, text='')
     
     def post(self):
-        user_text = str(self.request.get("text"))
+        user_text = str(self.request.get('text'))
         rot13_text = self.rot13(user_text)
-        self.write_page(rot13_text)
+        self.render(self.template, text=rot13_text)
     
     def rot13(self, s):
-        lowercase = string.ascii_lowercase
-        uppercase = string.ascii_uppercase
-        rot13_lower = lowercase[13:] + lowercase[:13]
-        rot13_upper = uppercase[13:] + uppercase[:13]
-        trans_lower = string.maketrans(lowercase, rot13_lower)
-        trans_upper = string.maketrans(uppercase, rot13_upper)
+        lc = string.ascii_lowercase
+        uc = string.ascii_uppercase
+        trans_lower = string.maketrans(lc, lc[13:] + lc[:13])
+        trans_upper = string.maketrans(uc, uc[13:] + uc[:13])
         return s.translate(trans_lower).translate(trans_upper)
 
 
-class SignupPage(webapp2.RequestHandler):
+class SignupPage(RequestWrangler):
+    template = 'signup.html'
+    
     def write_page(self, username="", username_error="", 
                    password_error="", verify_error="", email="", 
                    email_error=""):
@@ -59,8 +65,7 @@ class SignupPage(webapp2.RequestHandler):
                    'verify_error': verify_error, 
                    'email': email, 
                    'email_error': email_error}
-        template = JINJA_ENV.get_template('signup.html')
-        self.response.write(template.render(replace))
+        self.render(self.template, **replace)
     
     def get(self):
         self.write_page()
@@ -85,12 +90,13 @@ class SignupPage(webapp2.RequestHandler):
             self.write_page(**kwargs)  # display errors
             
 
-class WelcomePage(webapp2.RequestHandler):
+class WelcomePage(RequestWrangler):
+    template = 'welcome.html'
+    
     def get(self):
         username = self.request.get("username")
         if username and valid_username(username):
-            template = JINJA_ENV.get_template('welcome.html')
-            self.response.write(template.render({'username': username}))
+            self.render(self.template, username=username)
         else:
             self.redirect('/signup')
 
