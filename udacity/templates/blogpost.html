@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Blog{% endblock %}
+{% block header_title %}Blog{% endblock %}
+{% block content %}
+    <div class="post">
+        <div class="post-heading">
+            <div class="post-title">
+                {{ post.title }}
+            </div>
+            <div class="post-date">
+                {{ post.created }}
+            </div>
+        </div>
+        <pre class="post-content">{{ post.content }}</pre>
+    </div>
+{% endblock %}

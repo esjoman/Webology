@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Blog{% endblock %}
+{% block header_title %}Blog{% endblock %}
+{% block content %}
+    {% for p in posts %}
+        <div class="post">
+            <div class="post-heading">
+                <a href="/blog/{{ p.key().id() }}" class="post-title">
+                    {{ p.title }}
+                </a>
+                <div class="post-date">
+                    {{ p.created }}
+                </div>
+            </div>
+            <pre class="post-content">{{ p.content }}</pre>
+        </div>
+        <br/>
+        <br/>
+    {% endfor %}
+{% endblock %}
+{% block footer %}
+    {% if offset >= 10 %}
+        <a href="?o={{ offset - 10 }}">Newer Entries</a>
+    {% endif %}
+    {% if (posts|length) >= 10 %}
+        <a href="?o={{ offset + 10 }}">Older Entries</a>
+    {% endif %}
+{% endblock %}

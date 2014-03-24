@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}New Post{% endblock %}
+{% block header_title %}New Post{% endblock %}
+{% block content %}
+<form method="post">
+    <table>
+        <tr>
+            <td class="label">Title</td>
+            <td>
+                <input type="text" name="subject" value="{{ title }}"/>
+            </td>
+        </tr>
+        <tr>
+            <td class="label">Content</td>
+            <td>
+                <textarea name="content">{{ content }}</textarea>
+            </td>
+        </tr>
+        <tr>
+            <td><input type="submit" value="Submit"/></td>
+            <td class="error">{{ error }}</td>
+        </tr>
+    </table>
+</form>
+{% endblock %}
